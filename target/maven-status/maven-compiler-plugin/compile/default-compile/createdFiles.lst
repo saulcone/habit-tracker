@@ -1,7 +1,0 @@
-habits/app/domain/Habit.class
-habits/app/domain/HabitLog.class
-habits/app/repository/HabitLogRepository.class
-habits/app/HabitTrackerApplication.class
-habits/app/domain/User.class
-habits/app/repository/UserRepository.class
-habits/app/repository/HabitRepository.class

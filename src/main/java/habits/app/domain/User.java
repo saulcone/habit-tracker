@@ -2,7 +2,7 @@ package habits.app.domain;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity(name = "users")
+@Entity()
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

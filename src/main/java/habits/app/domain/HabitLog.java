@@ -22,9 +22,9 @@ public class HabitLog {
     @JoinColumn(name = "habit_id", nullable = false)
     private Habit habit;
 
-    private Instant completedAt = Instant.now();
+    private Instant completedAt;
 
-    private LocalDate localDate = LocalDate.now();
+    private LocalDate localDate;
 
     private String status;
 
@@ -34,7 +34,7 @@ public class HabitLog {
     public HabitLog(Habit habit, String status){
         this.habit = habit;
         this.completedAt = Instant.now();
-        this.localDate = localDate.now();
+        this.localDate = LocalDate.now();
         this.status = status;
     }
 

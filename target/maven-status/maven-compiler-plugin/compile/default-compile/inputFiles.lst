@@ -1,7 +1,0 @@
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/HabitTrackerApplication.java
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/domain/Habit.java
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/domain/HabitLog.java
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/domain/User.java
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/repository/HabitLogRepository.java
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/repository/HabitRepository.java
-/home/saulet/Desktop/habit-tracker/src/main/java/habits/app/repository/UserRepository.java
