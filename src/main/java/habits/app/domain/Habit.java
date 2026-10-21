@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity()
+@Table(name="habits")
 public class Habit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
