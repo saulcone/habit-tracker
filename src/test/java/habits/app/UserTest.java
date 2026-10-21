@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
@@ -50,11 +51,21 @@ class UserTest {
         User userCompare = userCheck.get();
 
         assertAll(
+                () -> assertNotSame(userSaved, userCompare),
                 () -> assertEquals(idExpected, userCompare.getId()),
                 () -> assertEquals(emailExpected, userCompare.getEmail()),
                 () -> assertEquals(timezoneExpected, userCompare.getTimezone())
         );
 
+    }
+
+    @Test
+    void C2_when_save_two_users_with_same_email_return_error(){
+        User user2 = new User("mail@test.com", "Europe/Madrid");
+
+        userRepo.saveAndFlush(user1);
+
+        assertThrows(DataIntegrityViolationException.class, () -> userRepo.saveAndFlush(user2));
     }
 
 }
