@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import jakarta.persistence.*;
 
 
+
+
 @Entity()
 @Table(
         name = "habit_logs",
@@ -13,6 +15,10 @@ import jakarta.persistence.*;
         )
 )
 public class HabitLog {
+
+    public enum Status{
+        CHECKED, UNCHECKED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,12 +32,13 @@ public class HabitLog {
 
     private LocalDate localDate;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     protected HabitLog(){
     }
 
-    public HabitLog(Habit habit, String status){
+    public HabitLog(Habit habit, Status status){
         this.habit = habit;
         this.completedAt = Instant.now();
         this.localDate = LocalDate.now();
@@ -66,11 +73,11 @@ public class HabitLog {
         this.localDate = localDate;
     }
 
-    public String getStatus(){
+    public Status getStatus(){
         return this.status;
     }
 
-    public void setStatus(String status){
+    public void setStatus(Status status){
         this.status = status;
     }
 }

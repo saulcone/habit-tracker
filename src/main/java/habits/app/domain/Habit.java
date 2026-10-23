@@ -17,7 +17,7 @@ public class Habit {
 
     private String description;
 
-    private boolean isActive = true;
+    private boolean isActive;
 
     private Instant createdAt = Instant.now();
 
