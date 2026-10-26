@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface HabitLogRepository extends JpaRepository<HabitLog, Long> {
-    List<HabitLog> findByLocalDateBetweenAndHabitEquals(LocalDate begin, LocalDate end, Habit habit);
+    List<HabitLog> findByLocalDateBetweenAndHabitEqualsOrderByLocalDate(LocalDate begin, LocalDate end, Habit habit);
     HabitLog findByLocalDateEqualsAndHabitEquals(LocalDate date, Habit habit);
+    boolean existsByHabitAndLocalDateEquals(Habit habit, LocalDate date);
+
+    HabitLog habit(Habit habit);
 }
