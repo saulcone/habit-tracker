@@ -7,6 +7,7 @@ import habits.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
@@ -15,10 +16,14 @@ import static java.time.ZoneId.getAvailableZoneIds;
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepo;
+    private final UserRepository userRepo;
 
-    public User registerUser(String email, String timezone) throws ExistingEmailException, InvalidTimezoneException {
+    public UserService(UserRepository userRepo){
+        this.userRepo = userRepo;
+    }
+
+    @Transactional
+    public User registerUser(String email, String timezone){
 
         String normalizedEmail = email.toLowerCase(Locale.ROOT);
 
@@ -28,12 +33,14 @@ public class UserService {
 
         User user = new User(normalizedEmail, timezone);
 
-        User savedUser;
+        User savedUser = new User();
 
         try{
             savedUser = userRepo.saveAndFlush(user);
         }catch(DataIntegrityViolationException e){
-            throw new ExistingEmailException(e.getMessage());
+            if(e.getCause().toString().equals("uk_users_email")){
+                throw new ExistingEmailException("");
+            }
         }
 
         return savedUser;
