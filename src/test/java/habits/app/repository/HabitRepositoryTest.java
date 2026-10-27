@@ -1,8 +1,8 @@
-package habits.app;
+package habits.app.repository;
 
 import habits.app.domain.Habit;
 import habits.app.domain.User;
-import habits.app.repository.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class HabitTest {
+public class HabitRepositoryTest {
 
     @Autowired
     TestEntityManager entityManager;

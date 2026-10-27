@@ -1,9 +1,9 @@
-package habits.app;
+package habits.app.repository;
 
 import habits.app.domain.Habit;
 import habits.app.domain.HabitLog;
 import habits.app.domain.User;
-import habits.app.repository.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,17 +13,15 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class HabitLogTest {
+public class HabitLogRepositoryTest {
 
     @Autowired
     HabitLogRepository habitLogRepo;

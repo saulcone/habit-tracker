@@ -1,7 +1,7 @@
-package habits.app;
+package habits.app.repository;
 
 import habits.app.domain.User;
-import habits.app.repository.UserRepository;
+
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
