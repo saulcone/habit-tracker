@@ -33,14 +33,16 @@ public class UserService {
 
         User user = new User(normalizedEmail, timezone);
 
-        User savedUser = new User();
+        User savedUser;
 
         try{
             savedUser = userRepo.saveAndFlush(user);
         }catch(DataIntegrityViolationException e){
-            if(e.getCause().toString().equals("uk_users_email")){
-                throw new ExistingEmailException("");
+            if(e.getMostSpecificCause().toString().contains("uk_users_email")){
+                throw new ExistingEmailException("duplicate key value violates unique constraint 'uk_users_email'", e.getMostSpecificCause());
             }
+
+            else throw e;
         }
 
         return savedUser;

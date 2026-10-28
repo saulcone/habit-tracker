@@ -1,6 +1,8 @@
 package habits.app.service;
 
 import habits.app.domain.User;
+import habits.app.exception.ExistingEmailException;
+import habits.app.exception.InvalidTimezoneException;
 import habits.app.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -62,4 +64,65 @@ public class UserServiceTest {
         );
 
     }
+
+    @Test
+    void C2_when_register_existing_mail_return_existing_email_exception(){
+
+        when(userRepo.existsByEmail(user.getEmail())).thenReturn(true);
+
+        assertThrows(ExistingEmailException.class, () -> service.registerUser(user.getEmail(), user.getTimezone()));
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+    }
+
+    @Test
+    void C3_when_register_user_with_not_correct_timezone_return_invalid_timezone_exception(){
+
+        user.setTimezone("not correct timezone");
+
+        assertThrows(InvalidTimezoneException.class, () -> service.registerUser(user.getEmail(), user.getTimezone()));
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
+    }
+
+    @Test
+    void C4_when_email_with_caps_check_saved_user_email_is_normalized(){
+
+        String cappedEmail = "MaiL@TeSt.CoM";
+
+        when(userRepo.existsByEmail(email)).thenReturn(false);
+        when(userRepo.saveAndFlush(any(User.class))).thenReturn(user);
+
+        service.registerUser(cappedEmail, timezone);
+
+        verify(userRepo).saveAndFlush(userCaptor.capture());
+
+        User capturedUser = userCaptor.getValue();
+
+        assertEquals(email, capturedUser.getEmail());
+
+    }
+
+    @Test
+    void C5_when_saving_checked_email_and_race_condition_on_db_return_data_integrity_violation_exception(){
+
+        when(userRepo.existsByEmail(email)).thenReturn(false);
+
+        DataIntegrityViolationException exceptionThrown = new DataIntegrityViolationException("uk_users_email");
+
+        when(userRepo.saveAndFlush(any(User.class))).thenThrow(exceptionThrown);
+
+
+        ExistingEmailException emailException = assertThrows(ExistingEmailException.class, () -> service.registerUser(email, timezone));
+
+        String expectedMessage = "uk_users_email";
+
+        assertTrue(emailException.getMessage().contains(expectedMessage));
+
+    }
+
+
 }
