@@ -124,5 +124,33 @@ public class UserServiceTest {
 
     }
 
+    @Test
+    void C6_when_saving_email_and_catches_non_related_email_data_integrity_violation_and_with_cause_then_rethrow_exception(){
+        when(userRepo.existsByEmail(email)).thenReturn(false);
+
+        DataIntegrityViolationException exceptionThrown = new DataIntegrityViolationException("non email exception", new Throwable("non email cause"));
+
+        when(userRepo.saveAndFlush(any(User.class))).thenThrow(exceptionThrown);
+
+
+        DataIntegrityViolationException receivedException = assertThrows(DataIntegrityViolationException.class, () -> service.registerUser(email, timezone));
+
+
+    }
+
+    @Test
+    void C7_when_saving_email_and_catches_non_related_email_data_integrity_violation_and_without_cause_then_rethrow_exception(){
+        when(userRepo.existsByEmail(email)).thenReturn(false);
+
+        DataIntegrityViolationException exceptionThrown = new DataIntegrityViolationException("exception without cause");
+
+        when(userRepo.saveAndFlush(any(User.class))).thenThrow(exceptionThrown);
+
+        DataIntegrityViolationException receivedException = assertThrows(DataIntegrityViolationException.class, () -> service.registerUser(email, timezone));
+
+        assertSame(exceptionThrown, receivedException);
+
+    }
+
 
 }
