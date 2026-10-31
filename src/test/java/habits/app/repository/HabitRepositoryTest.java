@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -75,7 +76,6 @@ public class HabitRepositoryTest {
 
         userRepo.saveAndFlush(user2);
 
-
         Habit habitUser2 = new Habit(user2, "Habit From User 2", "Eat oranges");
 
         Habit habit1 = new Habit(user1, "Habit 1", "Do push ups");
@@ -113,4 +113,37 @@ public class HabitRepositoryTest {
                 () -> assertTrue(habits.get(1).getIsActive())
         );
     }
+
+    @Test
+    void C3_when_saving_habit_with_same_name_and_same_user_return_data_integrity_violation(){
+        Habit habit1 = new Habit(user1, "Habit 1", "Do push ups");
+        Habit habit2 = new Habit(user1, "Habit 1", "Do push ups");
+
+        assertDoesNotThrow(() -> habitRepo.saveAndFlush(habit1));
+
+        entityManager.clear();
+
+        assertThrows(DataIntegrityViolationException.class, () -> habitRepo.saveAndFlush(habit2));
+    }
+
+    @Test
+    void C4_when_saving_habit_with_same_name_and_different_user_return_non_data_integrity_violation(){
+        Habit habit1 = new Habit(user1, "Habit 1", "Do push ups");
+
+        User user2 = new User("mail1@test.com", "Europe/Madrid");
+
+        userRepo.saveAndFlush(user2);
+
+        entityManager.clear();
+
+        Habit habit2 = new Habit(user2, "Habit 1", "Do push ups");
+
+
+        assertAll(
+                () -> assertDoesNotThrow(() -> habitRepo.saveAndFlush(habit1)),
+                () -> assertDoesNotThrow(() -> habitRepo.saveAndFlush(habit2))
+        );
+    }
+
+
 }

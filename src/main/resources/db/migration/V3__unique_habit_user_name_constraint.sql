@@ -1,0 +1,1 @@
+ALTER TABLE habits ADD CONSTRAINT uk_habits_user_name UNIQUE (user_id, name)
