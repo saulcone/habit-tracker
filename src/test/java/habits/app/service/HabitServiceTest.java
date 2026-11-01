@@ -180,7 +180,7 @@ public class HabitServiceTest {
     }
 
     @Test
-    void C10_when_saving_habit_with_name_length_100_throw_non_error(){
+    void C10_when_saving_habit_with_name_length_100_save_it_correctly(){
 
         habit1.setName("a".repeat(MAX_NAME_LENGTH));
 
@@ -192,7 +192,7 @@ public class HabitServiceTest {
     }
 
     @Test
-    void C11_when_saving_habit_with_description_length_300_throw_non_error(){
+    void C11_when_saving_habit_with_description_length_300_save_it_correctly(){
 
         habit1.setDescription("a".repeat(MAX_DESCRIPTION_LENGTH));
 
@@ -204,11 +204,11 @@ public class HabitServiceTest {
     }
 
     @Test
-    void C12_when_saving_habit_and_received_different_exception_with_message_rethrow_exception(){
+    void C12_when_saving_habit_and_received_different_exception_with_cause_rethrow_exception(){
 
         String expectedMessage = "different exception";
 
-        DataIntegrityViolationException thrownException = new DataIntegrityViolationException(expectedMessage);
+        DataIntegrityViolationException thrownException = new DataIntegrityViolationException(expectedMessage, new Throwable(expectedMessage));
 
         when(userRepo.findById(id)).thenReturn(Optional.of(user1));
         when(habitRepo.saveAndFlush(any(Habit.class))).thenThrow(thrownException);
@@ -221,11 +221,7 @@ public class HabitServiceTest {
     @Test
     void C13_when_saving_habit_and_received_different_exception_with_none_cause_rethrow_exception(){
 
-        String expectedMessage = "";
-
         DataIntegrityViolationException thrownException = new DataIntegrityViolationException("");
-
-        thrownException.initCause(null);
 
         when(userRepo.findById(id)).thenReturn(Optional.of(user1));
         when(habitRepo.saveAndFlush(any(Habit.class))).thenThrow(thrownException);
