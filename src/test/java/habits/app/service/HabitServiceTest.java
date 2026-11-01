@@ -13,6 +13,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
@@ -21,8 +22,7 @@ import static habits.app.service.HabitService.MAX_NAME_LENGTH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class HabitServiceTest {
@@ -63,6 +63,14 @@ public class HabitServiceTest {
         EmptyFieldException e = assertThrows(EmptyFieldException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertTrue(e.getMessage().contains("name"));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
     }
 
     @Test
@@ -73,6 +81,14 @@ public class HabitServiceTest {
         FieldTooLongException e = assertThrows(FieldTooLongException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertTrue(e.getMessage().contains("name"));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
     }
 
     @Test
@@ -83,60 +99,86 @@ public class HabitServiceTest {
         NullFieldException e = assertThrows(NullFieldException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertTrue(e.getMessage().contains("name"));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
     }
 
     @Test
-    void C4_when_description_lenght_is_more_than_300_characters_throw_field_too_long_exception(){
+    void C4_when_description_length_is_more_than_300_characters_throw_field_too_long_exception(){
 
         habit1.setDescription("a".repeat(MAX_DESCRIPTION_LENGTH + 1));
 
         FieldTooLongException e = assertThrows(FieldTooLongException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertTrue(e.getMessage().contains("description"));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
     }
 
     @Test
-    void C5_when_description_is_null_throw_null_field_exception(){
-
-        habit1.setDescription(null);
-
-        NullFieldException e = assertThrows(NullFieldException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
-
-        assertTrue(e.getMessage().contains("description"));
-    }
-
-    @Test
-    void C6_when_name_begins_or_ends_with_space_throw_invalid_field_exception(){
+    void C5_when_name_begins_or_ends_with_space_throw_invalid_field_exception(){
 
         habit1.setName(" Habit 1");
 
         InvalidNameException e = assertThrows(InvalidNameException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertTrue(e.getMessage().contains("name"));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
     }
 
     @Test
-    void C7_when_description_begins_or_ends_with_space_throw_invalid_field_exception(){
+    void C6_when_description_begins_or_ends_with_space_throw_invalid_field_exception(){
 
         habit1.setDescription("Description ");
 
         InvalidDescriptionException e = assertThrows(InvalidDescriptionException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertTrue(e.getMessage().contains("description"));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
+
+        verify(userRepo, never()).saveAndFlush(any(User.class));
+
+        verifyNoInteractions(userRepo);
     }
 
     @Test
-    void C8_when_checking_non_existent_user_throw_new_non_existing_user_exception(){
+    void C7_when_checking_non_existent_user_throw_new_non_existing_user_exception(){
 
-        NonExistingUserException thrownException = new NonExistingUserException("User with id: " + id + " not found");
+        when(userRepo.findById(id)).thenReturn(Optional.empty());
 
-        when(userRepo.findById(id)).thenThrow(thrownException);
+
 
         assertThrows(NonExistingUserException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
+
+        verifyNoInteractions(habitRepo);
     }
 
     @Test
-    void C9_when_register_correct_habit_return_habit_correctly_saved(){
+    void C8_when_register_correct_habit_return_habit_correctly_saved(){
 
         String habitName = "Habit test";
 
@@ -156,8 +198,48 @@ public class HabitServiceTest {
         assertAll(
                 () -> assertSame(habitToSave, savedHabit),
                 () -> assertEquals(habitName,  value.getName()),
-                () -> assertEquals(habitDesc, value.getDescription())
+                () -> assertEquals(habitDesc, value.getDescription()),
+                () -> assertSame(user1, value.getUser())
         );
+
+    }
+
+    @Test
+    void C9_saving_habit_from_same_user_with_same_name_throw_existing_habit_for_that_user(){
+
+        DataIntegrityViolationException thrownException = new DataIntegrityViolationException("uk_habit_user_name_constraint");
+
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+        when(habitRepo.saveAndFlush(any(Habit.class))).thenThrow(thrownException);
+
+        ExistingHabitForThatUserException expectedException = assertThrows(ExistingHabitForThatUserException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+        String expectedMessage = "Habit's name already existing.";
+
+        assertEquals(expectedMessage, expectedException.getMessage());
+    }
+
+    @Test
+    void C10_when_saving_habit_with_name_length_100_throw_non_error(){
+
+        habit1.setName("a".repeat(MAX_NAME_LENGTH));
+
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+        when(habitRepo.saveAndFlush(any(Habit.class))).thenReturn(habit1);
+
+        assertDoesNotThrow(() -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+    }
+
+    @Test
+    void C11_when_saving_habit_with_description_length_100_throw_non_error(){
+
+        habit1.setDescription("a".repeat(MAX_DESCRIPTION_LENGTH));
+
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+        when(habitRepo.saveAndFlush(any(Habit.class))).thenReturn(habit1);
+
+        assertDoesNotThrow(() -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
     }
 }

@@ -44,15 +44,15 @@ public class HabitService {
         if(name.startsWith(" ") ||  name.endsWith(" ")){
             throw new InvalidNameException("Field name begins or ends with empty space");
         }
-        if (description == null) {
-            throw new NullFieldException("Field description is null");
+        if (description != null) {
+            if(description.startsWith(" ") ||  description.endsWith(" ")){
+                throw new InvalidDescriptionException("Field description begins or ends with empty space");
+            }
+            if(description.length() > MAX_DESCRIPTION_LENGTH){
+                throw new FieldTooLongException("Field description is too long");
+            }
         }
-        if(description.startsWith(" ") ||  description.endsWith(" ")){
-            throw new InvalidDescriptionException("Field description begins or ends with empty space");
-        }
-        if(description.length() > MAX_DESCRIPTION_LENGTH){
-            throw new FieldTooLongException("Field description is too long");
-        }
+
         Optional<User> foundUser = userRepo.findById(userId);
         if(foundUser.isEmpty()){
             throw new NonExistingUserException("User with id: " + userId + " not found");
@@ -67,7 +67,7 @@ public class HabitService {
         try{
             savedHabit = habitRepo.saveAndFlush(habit);
         }catch(DataIntegrityViolationException d){
-            if(d.getMessage().contains("uk_habits_user_name")){
+            if(d.getMessage().contains("uk_habit_user_name")){
                 throw new ExistingHabitForThatUserException("Habit's name already existing.", d.getCause());
             }
 
