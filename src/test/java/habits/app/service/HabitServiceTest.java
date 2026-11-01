@@ -49,7 +49,7 @@ public class HabitServiceTest {
 
     @BeforeEach
     void setUp() {
-        user1 = new User("mail@test.com", "Madrid/Europe");
+        user1 = new User("mail@test.com", "Europe/Madrid");
 
         habit1 = new Habit(user1, "Habit 1", "Study Chinese");
 
@@ -64,13 +64,7 @@ public class HabitServiceTest {
 
         assertTrue(e.getMessage().contains("name"));
 
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
-
-        verifyNoInteractions(habitRepo);
-
-        verify(userRepo, never()).saveAndFlush(any(User.class));
-
-        verifyNoInteractions(userRepo);
+        verifyNoInteractions(userRepo, habitRepo);
     }
 
     @Test
@@ -82,13 +76,7 @@ public class HabitServiceTest {
 
         assertTrue(e.getMessage().contains("name"));
 
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
-
-        verifyNoInteractions(habitRepo);
-
-        verify(userRepo, never()).saveAndFlush(any(User.class));
-
-        verifyNoInteractions(userRepo);
+        verifyNoInteractions(userRepo, habitRepo);
     }
 
     @Test
@@ -100,13 +88,7 @@ public class HabitServiceTest {
 
         assertTrue(e.getMessage().contains("name"));
 
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
-
-        verifyNoInteractions(habitRepo);
-
-        verify(userRepo, never()).saveAndFlush(any(User.class));
-
-        verifyNoInteractions(userRepo);
+        verifyNoInteractions(userRepo, habitRepo);
     }
 
     @Test
@@ -118,13 +100,7 @@ public class HabitServiceTest {
 
         assertTrue(e.getMessage().contains("description"));
 
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
-
-        verifyNoInteractions(habitRepo);
-
-        verify(userRepo, never()).saveAndFlush(any(User.class));
-
-        verifyNoInteractions(userRepo);
+        verifyNoInteractions(userRepo, habitRepo);
     }
 
     @Test
@@ -136,13 +112,7 @@ public class HabitServiceTest {
 
         assertTrue(e.getMessage().contains("name"));
 
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
-
-        verifyNoInteractions(habitRepo);
-
-        verify(userRepo, never()).saveAndFlush(any(User.class));
-
-        verifyNoInteractions(userRepo);
+        verifyNoInteractions(userRepo, habitRepo);
     }
 
     @Test
@@ -154,13 +124,7 @@ public class HabitServiceTest {
 
         assertTrue(e.getMessage().contains("description"));
 
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
-
-        verifyNoInteractions(habitRepo);
-
-        verify(userRepo, never()).saveAndFlush(any(User.class));
-
-        verifyNoInteractions(userRepo);
+        verifyNoInteractions(userRepo, habitRepo);
     }
 
     @Test
@@ -168,11 +132,7 @@ public class HabitServiceTest {
 
         when(userRepo.findById(id)).thenReturn(Optional.empty());
 
-
-
         assertThrows(NonExistingUserException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
-
-        verify(habitRepo, never()).saveAndFlush(any(Habit.class));
 
         verifyNoInteractions(habitRepo);
     }
@@ -232,7 +192,7 @@ public class HabitServiceTest {
     }
 
     @Test
-    void C11_when_saving_habit_with_description_length_100_throw_non_error(){
+    void C11_when_saving_habit_with_description_length_300_throw_non_error(){
 
         habit1.setDescription("a".repeat(MAX_DESCRIPTION_LENGTH));
 
@@ -240,6 +200,52 @@ public class HabitServiceTest {
         when(habitRepo.saveAndFlush(any(Habit.class))).thenReturn(habit1);
 
         assertDoesNotThrow(() -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+    }
+
+    @Test
+    void C12_when_saving_habit_and_received_different_exception_with_message_rethrow_exception(){
+
+        String expectedMessage = "different exception";
+
+        DataIntegrityViolationException thrownException = new DataIntegrityViolationException(expectedMessage);
+
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+        when(habitRepo.saveAndFlush(any(Habit.class))).thenThrow(thrownException);
+
+        DataIntegrityViolationException receivedException = assertThrows(DataIntegrityViolationException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+        assertSame(thrownException, receivedException);
+    }
+
+    @Test
+    void C13_when_saving_habit_and_received_different_exception_with_none_cause_rethrow_exception(){
+
+        String expectedMessage = "";
+
+        DataIntegrityViolationException thrownException = new DataIntegrityViolationException("");
+
+        thrownException.initCause(null);
+
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+        when(habitRepo.saveAndFlush(any(Habit.class))).thenThrow(thrownException);
+
+        DataIntegrityViolationException receivedException = assertThrows(DataIntegrityViolationException.class, () -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+        assertSame(thrownException, receivedException);
+    }
+
+    @Test
+    void C14_when_saving_habit_with_null_description_non_error_received(){
+
+        habit1.setDescription(null);
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+
+        when(habitRepo.saveAndFlush(any(Habit.class))).thenReturn(habit1);
+
+        Habit createdHabit = assertDoesNotThrow(() -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
+
+        assertSame(habit1, createdHabit);
 
     }
 }
