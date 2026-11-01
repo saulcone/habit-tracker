@@ -16,9 +16,9 @@ import java.util.Optional;
 @Service
 public class HabitService {
 
-    final int MAX_NAME_LENGTH = 100;
+    public static final int MAX_NAME_LENGTH = 100;
 
-    final int MAX_DESCRIPTION_LENGTH = 300;
+    public static final int MAX_DESCRIPTION_LENGTH = 300;
 
     private final HabitRepository habitRepo;
 
@@ -33,7 +33,7 @@ public class HabitService {
     public Habit registerHabit(long userId, String name, String description){
 
         if (name == null) {
-            throw new EmptyFieldException("Field name is null");
+            throw new NullFieldException("Field name is null");
         }
         if (name.isEmpty()) {
             throw new EmptyFieldException("Field name is empty");
@@ -42,12 +42,17 @@ public class HabitService {
             throw new FieldTooLongException("Field name is too long");
         }
         if(name.startsWith(" ") ||  name.endsWith(" ")){
-            throw new InvalidNameException("Field name is invalid");
+            throw new InvalidNameException("Field name begins or ends with empty space");
         }
-        if(description != null && description.length() > MAX_DESCRIPTION_LENGTH){
+        if (description == null) {
+            throw new NullFieldException("Field description is null");
+        }
+        if(description.startsWith(" ") ||  description.endsWith(" ")){
+            throw new InvalidDescriptionException("Field description begins or ends with empty space");
+        }
+        if(description.length() > MAX_DESCRIPTION_LENGTH){
             throw new FieldTooLongException("Field description is too long");
         }
-
         Optional<User> foundUser = userRepo.findById(userId);
         if(foundUser.isEmpty()){
             throw new NonExistingUserException("User with id: " + userId + " not found");
