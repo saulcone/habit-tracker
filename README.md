@@ -120,7 +120,7 @@ What they cover:
 - [x] JPA entities
 - [x] Repositories with derived queries
 - [x] Repository integration tests against PostgreSQL
-- [ ] Service layer: business rules, transactions and unit tests with Mockito
+- [x] Service layer: business rules, transactions and unit tests with Mockito
   - [ ] User registration (unique email)
   - [ ] Habit creation
   - [ ] Log a habit for "today" in the user's time zone
