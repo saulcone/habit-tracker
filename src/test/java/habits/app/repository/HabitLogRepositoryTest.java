@@ -13,7 +13,9 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,8 @@ import java.util.Optional;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class HabitLogRepositoryTest {
+
+    private static final ZoneId ZONE = ZoneId.of("Europe/Madrid");
 
     @Autowired
     HabitLogRepository habitLogRepo;
@@ -40,6 +44,17 @@ public class HabitLogRepositoryTest {
     Habit habit1;
 
     Habit habit2;
+
+    /**
+     * Builds a log for the given habit on the given local date.
+     * The completion instant is derived from the date (12:00 in Europe/Madrid), so
+     * instant and local date are always consistent with each other.
+     * If the HabitLog constructor changes, this is the only place to adapt.
+     */
+    private HabitLog logOn(Habit habit, LocalDate date) {
+        Instant completedAt = date.atTime(12, 0).atZone(ZONE).toInstant();
+        return new HabitLog(habit, HabitLog.Status.UNCHECKED, completedAt, date);
+    }
 
     @BeforeEach
     void setUp(){
@@ -61,8 +76,10 @@ public class HabitLogRepositoryTest {
     @Test
     void C1_when_saving_log_check_date_and_status_returns_no_error() {
 
-        HabitLog habitLog1 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        HabitLog habitLog2 = new HabitLog(habit2, HabitLog.Status.UNCHECKED);
+        LocalDate date = LocalDate.of(2026, 10, 19);
+
+        HabitLog habitLog1 = logOn(habit1, date);
+        HabitLog habitLog2 = logOn(habit2, date);
 
         habitLogRepo.saveAndFlush(habitLog1);
         habitLogRepo.saveAndFlush(habitLog2);
@@ -117,23 +134,17 @@ public class HabitLogRepositoryTest {
         LocalDate date5 = LocalDate.of(2026, 10, 24);
 
 
-        HabitLog habitLog1 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog1.setLocalDate(date2);
+        HabitLog habitLog1 = logOn(habit1, date2);
 
-        HabitLog habitLog2 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog2.setLocalDate(date5);
+        HabitLog habitLog2 = logOn(habit1, date5);
 
-        HabitLog habitLog3 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog3.setLocalDate(date4);
+        HabitLog habitLog3 = logOn(habit1, date4);
 
-        HabitLog habitLog4 = new HabitLog(habit2, HabitLog.Status.UNCHECKED);
-        habitLog4.setLocalDate(date2);
+        HabitLog habitLog4 = logOn(habit2, date2);
 
-        HabitLog habitLog5 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog5.setLocalDate(date1);
+        HabitLog habitLog5 = logOn(habit1, date1);
 
-        HabitLog habitLog6 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog6.setLocalDate(date3);
+        HabitLog habitLog6 = logOn(habit1, date3);
 
         habitLogRepo.saveAndFlush(habitLog1);
         habitLogRepo.saveAndFlush(habitLog2);
@@ -174,8 +185,7 @@ public class HabitLogRepositoryTest {
         LocalDate date1 = LocalDate.of(2026, 10, 19);
         LocalDate date2 = LocalDate.of(2026, 10, 22);
 
-        HabitLog habitLog1 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog1.setLocalDate(date1);
+        HabitLog habitLog1 = logOn(habit1, date1);
 
 
         habitLogRepo.saveAndFlush(habitLog1);
@@ -197,17 +207,13 @@ public class HabitLogRepositoryTest {
         LocalDate date1 = LocalDate.of(2026, 10, 19);
         LocalDate date2 = LocalDate.of(2026, 10, 20);
 
-        HabitLog habitLogToSave = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLogToSave.setLocalDate(date1);
+        HabitLog habitLogToSave = logOn(habit1, date1);
 
-        HabitLog habitLogToException = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLogToException.setLocalDate(date1);
+        HabitLog habitLogToException = logOn(habit1, date1);
 
-        HabitLog habitLog1 = new HabitLog(habit1, HabitLog.Status.UNCHECKED);
-        habitLog1.setLocalDate(date2);
+        HabitLog habitLog1 = logOn(habit1, date2);
 
-        HabitLog habitLog2 = new HabitLog(habit2, HabitLog.Status.UNCHECKED);
-        habitLog2.setLocalDate(date2);
+        HabitLog habitLog2 = logOn(habit2, date2);
 
 
 

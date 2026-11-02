@@ -38,10 +38,10 @@ public class HabitLog {
     protected HabitLog(){
     }
 
-    public HabitLog(Habit habit, Status status){
+    public HabitLog(Habit habit, Status status, Instant completedAt, LocalDate localDate){
         this.habit = habit;
-        this.completedAt = Instant.now();
-        this.localDate = LocalDate.now();
+        this.completedAt = completedAt;
+        this.localDate = localDate;
         this.status = status;
     }
 
