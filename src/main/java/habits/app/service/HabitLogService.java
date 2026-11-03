@@ -1,17 +1,19 @@
 package habits.app.service;
 
 import habits.app.domain.Habit;
+import habits.app.domain.HabitLog;
 import habits.app.domain.User;
 import habits.app.exception.*;
 import habits.app.repository.HabitLogRepository;
 import habits.app.repository.HabitRepository;
-import habits.app.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.text.html.Option;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.Optional;
+
+
 
 @Service
 public class HabitLogService {
@@ -20,15 +22,16 @@ public class HabitLogService {
 
     private final HabitRepository habitRepo;
 
-    private final UserRepository userRepo;
+    private final Clock clock;
 
-    public HabitLogService(HabitLogRepository habitLogRepo, HabitRepository habitRepo, UserRepository userRepo){
+    public HabitLogService(HabitLogRepository habitLogRepo, HabitRepository habitRepo, Clock clock){
         this.habitLogRepo = habitLogRepo;
         this.habitRepo = habitRepo;
-        this.userRepo = userRepo;
+        this.clock = clock;
     }
 
-    public HabitLogService registerHabitLog(long habitId, LocalDate localDate, Instant completedAt){
+    @Transactional
+    public HabitLog registerHabitLog(long habitId){
 
         Optional<Habit> habitFound = habitRepo.findById(habitId);
 
@@ -44,8 +47,40 @@ public class HabitLogService {
 
         User user = habit.getUser();
 
+        ZoneId zoneId;
+
+        // we take for granted that the user's timezone is always correct, but even though we catch the exception that could be thrown
+        try{
+            zoneId = ZoneId.of(user.getTimezone());
+        }catch(DateTimeException d){
+            throw new InvalidTimezoneException("The timezone in the user " + user.getId() + " is not correct.");
+        }
+
+        LocalDate localDate;
+        Instant completedAt;
+
+        completedAt = clock.instant();
+
+        localDate = LocalDate.ofInstant(completedAt, zoneId);
+
+        HabitLog habitLogToSave = new HabitLog(habit, HabitLog.Status.CHECKED, completedAt, localDate);
+
+        Optional<HabitLog> checkSavedHabitLog = habitLogRepo.findByLocalDateEqualsAndHabitEquals(localDate, habit);
 
 
+        try {
+            if(checkSavedHabitLog.isPresent()){
+                return checkSavedHabitLog.get();
+            }
+            habitLogToSave = habitLogRepo.saveAndFlush(habitLogToSave);
+
+            return habitLogToSave;
+
+        } catch (DataIntegrityViolationException d) {
+            if (d.getMessage().contains("uk_habit_logs_habit_date")) {
+                throw new IncorrectHabitLogDateException(d.getMessage(), d.getMostSpecificCause());
+            } else throw d;
+        }
 
     }
 }
