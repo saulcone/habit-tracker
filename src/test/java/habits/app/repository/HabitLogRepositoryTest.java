@@ -227,8 +227,36 @@ public class HabitLogRepositoryTest {
                 () -> assertThrows(DataIntegrityViolationException.class, () -> habitLogRepo.saveAndFlush(habitLogToException))
 
         );
+    }
+
+    @Test
+    void C5_find_by_date_and_habit_returns_only_the_matching_log(){
+
+        LocalDate date1 = LocalDate.of(2026, 10, 19);
+        LocalDate date2 = LocalDate.of(2026, 10, 18);
+
+        HabitLog habitLog = logOn(habit1, date1);
+
+        HabitLog expectedHabit = habitLogRepo.saveAndFlush(habitLog);
+
+        entityManager.clear();
+
+        Optional<HabitLog> habitSearched = habitLogRepo.findByLocalDateEqualsAndHabitEquals(date1, habit1);
+        Optional<HabitLog> habitNotFoundDifferentHabit = habitLogRepo.findByLocalDateEqualsAndHabitEquals(date1, habit2);
+        Optional<HabitLog> habitNotFoundDifferentDate = habitLogRepo.findByLocalDateEqualsAndHabitEquals(date2, habit1);
+
+        assertAll(
+                () -> assertTrue(habitSearched.isPresent()),
+                () -> assertFalse(habitNotFoundDifferentHabit.isPresent()),
+                () -> assertFalse(habitNotFoundDifferentDate.isPresent())
+        );
 
 
+        HabitLog habitFound = habitSearched.get();
 
+        assertAll(
+                () -> assertEquals(expectedHabit.getId(), habitFound.getId()),
+                () -> assertEquals(habit1.getId(), habitFound.getHabit().getId())
+        );
     }
 }
