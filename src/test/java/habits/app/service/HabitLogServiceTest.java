@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -162,6 +163,8 @@ public class HabitLogServiceTest {
         when(habitRepo.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(NonExistingHabitException.class, () -> habitLogService.registerHabitLog(id));
+
+        verifyNoInteractions(habitLogRepo);
     }
 
     @Test
@@ -174,6 +177,8 @@ public class HabitLogServiceTest {
         when(habitRepo.findById(id)).thenReturn(habitReturn);
 
         assertThrows(InactiveHabitException.class, () -> habitLogService.registerHabitLog(id));
+
+        verifyNoInteractions(habitLogRepo);
     }
 
     @Test
@@ -186,6 +191,8 @@ public class HabitLogServiceTest {
         when(habitRepo.findById(id)).thenReturn(habitReturn);
 
         assertThrows(InvalidTimezoneException.class, () -> habitLogService.registerHabitLog(id));
+
+        verifyNoInteractions(habitLogRepo);
     }
 
     @Test
@@ -221,7 +228,7 @@ public class HabitLogServiceTest {
 
         when(habitLogRepo.findByLocalDateEqualsAndHabitEquals(localDateTest, habit1)).thenReturn(Optional.empty());
 
-        IncorrectHabitLogDateException exceptionThrown = new IncorrectHabitLogDateException("uk_habit_logs_habit_date", new Throwable("uk_habit_logs_habit_date"));
+        DataIntegrityViolationException exceptionThrown = new DataIntegrityViolationException("uk_habit_logs_habit_date", new Throwable("uk_habit_logs_habit_date"));
 
         when(habitLogRepo.saveAndFlush((any(HabitLog.class)))).thenThrow(exceptionThrown);
 
@@ -231,7 +238,7 @@ public class HabitLogServiceTest {
     }
 
     @Test
-    void C8_when_registering_same_habit_with_same_date_throw_incorrect_habit_log_date_exception(){
+    void C8_when_registering_same_habit_with_same_date_throw_the_same_exception(){
 
         Optional<Habit> habitReturn = Optional.of(habit1);
 
@@ -239,12 +246,17 @@ public class HabitLogServiceTest {
 
         when(habitLogRepo.findByLocalDateEqualsAndHabitEquals(localDateTest, habit1)).thenReturn(Optional.empty());
 
-        RuntimeException exceptionThrown = new RuntimeException("uk_habit_logs_habit_date", new Throwable("uk_habit_logs_habit_date"));
+        String exceptionMessage = "different cause";
+
+        DataIntegrityViolationException exceptionThrown = new DataIntegrityViolationException(exceptionMessage, new Throwable("different cause"));
 
         when(habitLogRepo.saveAndFlush((any(HabitLog.class)))).thenThrow(exceptionThrown);
 
-        RuntimeException exceptionReceived = assertThrows(RuntimeException.class, () -> habitLogService.registerHabitLog(id));
+        DataIntegrityViolationException exceptionReceived = assertThrows(DataIntegrityViolationException.class, () -> habitLogService.registerHabitLog(id));
 
-        assertEquals("uk_habit_logs_habit_date", exceptionReceived.getMessage());
+        assertAll(
+                () -> assertEquals(exceptionMessage, exceptionReceived.getMessage()),
+                () -> assertSame(exceptionThrown, exceptionReceived)
+        );
     }
 }

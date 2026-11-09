@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.xml.crypto.Data;
 import java.time.*;
 import java.util.Optional;
 
@@ -80,7 +81,9 @@ public class HabitLogService {
         } catch (DataIntegrityViolationException d) {
             if (d.getMessage().contains("uk_habit_logs_habit_date")) {
                 throw new IncorrectHabitLogDateException(d.getMessage(), d.getMostSpecificCause());
-            } else throw d;
+            } else{
+                throw d;
+            }
         }
 
     }
