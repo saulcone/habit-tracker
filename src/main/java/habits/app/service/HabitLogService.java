@@ -72,6 +72,7 @@ public class HabitLogService {
             if(checkSavedHabitLog.isPresent()){
                 return checkSavedHabitLog.get();
             }
+
             habitLogToSave = habitLogRepo.saveAndFlush(habitLogToSave);
 
             return habitLogToSave;
