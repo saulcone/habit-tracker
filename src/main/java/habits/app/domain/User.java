@@ -43,4 +43,6 @@ public class User {
     public void setTimezone(String timezone){
         this.timezone = timezone;
     }
+
+    public Instant getCreatedAt(){ return this.createdAt; }
 }
