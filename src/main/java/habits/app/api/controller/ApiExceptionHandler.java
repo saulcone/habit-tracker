@@ -11,7 +11,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import org.slf4j.Logger;
 
 @RestControllerAdvice("habits.app.api.controller")
-public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler{
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
