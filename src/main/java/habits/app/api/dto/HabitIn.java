@@ -10,7 +10,7 @@ import java.time.Instant;
 public record HabitIn (
         @NotNull
         @Size(max = HabitService.MAX_NAME_LENGTH)
-                String name,
+        String name,
 
         @Size(max = HabitService.MAX_DESCRIPTION_LENGTH)
         String description
