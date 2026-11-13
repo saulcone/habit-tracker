@@ -55,7 +55,7 @@ public class HabitLogService {
         try{
             zoneId = ZoneId.of(user.getTimezone());
         }catch(DateTimeException d){
-            throw new InvalidTimezoneException("The timezone in the user " + user.getId() + " is not correct.");
+            throw new IncorrectZoneIdException("The timezone in the user " + user.getId() + " is not correct.", d.getCause());
         }
 
         LocalDate localDate;

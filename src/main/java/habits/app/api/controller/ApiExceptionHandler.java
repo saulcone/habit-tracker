@@ -30,7 +30,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler{
         return ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(409), exception.getMessage());
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler({IncorrectZoneIdException.class, Exception.class})
     public ProblemDetail handle500(Exception exception){
         log.error(exception.getMessage(), exception);
         return ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(500), "Not recognised system exception thrown.");

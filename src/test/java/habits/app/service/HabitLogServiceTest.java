@@ -3,10 +3,7 @@ package habits.app.service;
 import habits.app.domain.Habit;
 import habits.app.domain.HabitLog;
 import habits.app.domain.User;
-import habits.app.exception.InactiveHabitException;
-import habits.app.exception.IncorrectHabitLogDateException;
-import habits.app.exception.InvalidTimezoneException;
-import habits.app.exception.NonExistingHabitException;
+import habits.app.exception.*;
 import habits.app.repository.HabitLogRepository;
 import habits.app.repository.HabitRepository;
 
@@ -196,7 +193,7 @@ public class HabitLogServiceTest {
 
         when(habitRepo.findById(id)).thenReturn(habitReturn);
 
-        assertThrows(InvalidTimezoneException.class, () -> habitLogService.registerHabitLog(id));
+        assertThrows(IncorrectZoneIdException.class, () -> habitLogService.registerHabitLog(id));
 
         verifyNoInteractions(habitLogRepo);
     }
