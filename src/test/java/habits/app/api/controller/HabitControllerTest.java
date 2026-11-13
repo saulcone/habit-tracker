@@ -54,7 +54,6 @@ public class HabitControllerTest {
 
         ReflectionTestUtils.setField(user, "id", userId);
 
-
         Habit habitReturn = new Habit(user, name, description);
 
         ReflectionTestUtils.setField(habitReturn, "id", habitId);
