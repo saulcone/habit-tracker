@@ -9,7 +9,7 @@ import habits.app.exception.InvalidTimezoneException;
 import habits.app.exception.NonExistingHabitException;
 import habits.app.repository.HabitLogRepository;
 import habits.app.repository.HabitRepository;
-import habits.app.repository.UserRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +18,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+
 
 import java.time.Clock;
 import java.time.Instant;
@@ -40,9 +41,6 @@ public class HabitLogServiceTest {
 
     @Mock
     HabitRepository habitRepo;
-
-    @Mock
-    UserRepository userRepo;
 
     Clock clock;
 
@@ -94,7 +92,9 @@ public class HabitLogServiceTest {
 
         when(habitLogRepo.saveAndFlush((any(HabitLog.class)))).thenReturn(habitLog1);
 
-        HabitLog savedHabitLog = habitLogService.registerHabitLog(id);
+        HabitLogReturnType returnInfo1 = habitLogService.registerHabitLog(id);
+
+        HabitLog savedHabitLog = returnInfo1.habitLog();
 
         verify(habitLogRepo).saveAndFlush(habitLogArgumentCaptor.capture());
 
@@ -105,7 +105,8 @@ public class HabitLogServiceTest {
                 () -> assertEquals(HabitLog.Status.CHECKED, habitLogSaved.getStatus()),
                 () -> assertEquals(NOW, habitLogSaved.getCompletedAt()),
                 () -> assertSame(habit1, habitLogSaved.getHabit()),
-                () -> assertSame(habitLog1, savedHabitLog)
+                () -> assertSame(habitLog1, savedHabitLog),
+                () -> assertTrue(returnInfo1.created())
         );
     }
 
@@ -133,10 +134,13 @@ public class HabitLogServiceTest {
 
         when(habitLogRepo.saveAndFlush((any(HabitLog.class)))).thenReturn(habitLog1, habitLog2);
 
-        HabitLog savedHabitLog1 = habitLogService.registerHabitLog(id);
+        HabitLogReturnType returnInfo1 = habitLogService.registerHabitLog(id);
 
+        HabitLog savedHabitLog1 = returnInfo1.habitLog();
 
-        HabitLog savedHabitLog2 = habitLogService.registerHabitLog(id2);
+        HabitLogReturnType returnInfo2 = habitLogService.registerHabitLog(id2);
+
+        HabitLog savedHabitLog2 = returnInfo2.habitLog();
 
         verify(habitLogRepo, times(2)).saveAndFlush(habitLogArgumentCaptor.capture());
 
@@ -148,12 +152,14 @@ public class HabitLogServiceTest {
                 () -> assertEquals(NOW, habitLogs.getFirst().getCompletedAt()),
                 () -> assertSame(habit1, habitLogs.getFirst().getHabit()),
                 () -> assertSame(habitLog1, savedHabitLog1),
+                () -> assertTrue(returnInfo1.created()),
 
                 () -> assertEquals(localDateTest2, habitLogs.get(1).getLocalDate()),
                 () -> assertEquals(HabitLog.Status.CHECKED, habitLogs.get(1).getStatus()),
                 () -> assertEquals(NOW, habitLogs.get(1).getCompletedAt()),
                 () -> assertSame(habit2, habitLogs.get(1).getHabit()),
-                () -> assertSame(habitLog2, savedHabitLog2)
+                () -> assertSame(habitLog2, savedHabitLog2),
+                () -> assertTrue(returnInfo2.created())
         );
     }
 
@@ -206,7 +212,9 @@ public class HabitLogServiceTest {
 
         when(habitLogRepo.findByLocalDateEqualsAndHabitEquals(localDateTest, habit1)).thenReturn(habitLogReturn);
 
-        HabitLog savedHabitLog = habitLogService.registerHabitLog(id);
+        HabitLogReturnType returnInfo1 = habitLogService.registerHabitLog(id);
+
+        HabitLog savedHabitLog = returnInfo1.habitLog();
 
         verify(habitLogRepo, never()).saveAndFlush(any(HabitLog.class));
 
@@ -215,7 +223,8 @@ public class HabitLogServiceTest {
                 () -> assertEquals(HabitLog.Status.CHECKED, savedHabitLog.getStatus()),
                 () -> assertEquals(NOW, savedHabitLog.getCompletedAt()),
                 () -> assertSame(habit1, savedHabitLog.getHabit()),
-                () -> assertSame(habitLog1, savedHabitLog)
+                () -> assertSame(habitLog1, savedHabitLog),
+                () -> assertFalse(returnInfo1.created())
         );
     }
 
@@ -234,7 +243,7 @@ public class HabitLogServiceTest {
 
         IncorrectHabitLogDateException exceptionReceived = assertThrows(IncorrectHabitLogDateException.class, () -> habitLogService.registerHabitLog(id));
 
-        assertEquals("uk_habit_logs_habit_date", exceptionReceived.getMessage());
+        assertEquals("The habit already exists for that day.", exceptionReceived.getMessage());
     }
 
     @Test

@@ -15,7 +15,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler{
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
-    @ExceptionHandler({InvalidTimezoneException.class, EmptyFieldException.class, NullFieldException.class, FieldTooLongException.class, InvalidNameException.class, InvalidDescriptionException.class})
+    @ExceptionHandler({IncorrectHabitLogDateException.class, InvalidTimezoneException.class, EmptyFieldException.class, NullFieldException.class, FieldTooLongException.class, InvalidNameException.class, InvalidDescriptionException.class})
     public ProblemDetail handle400(RuntimeException exception){
         return ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), exception.getMessage());
     }
@@ -25,7 +25,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler{
         return ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(404), exception.getMessage());
     }
 
-    @ExceptionHandler({ExistingEmailException.class, ExistingHabitForThatUserException.class, InactiveHabitException.class, IncorrectHabitLogDateException.class})
+    @ExceptionHandler({ExistingEmailException.class, ExistingHabitForThatUserException.class, InactiveHabitException.class})
     public ProblemDetail handle409(RuntimeException exception){
         return ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(409), exception.getMessage());
     }

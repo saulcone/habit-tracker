@@ -7,12 +7,13 @@ import habits.app.exception.*;
 import habits.app.repository.HabitLogRepository;
 import habits.app.repository.HabitRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.xml.crypto.Data;
 import java.time.*;
 import java.util.Optional;
+
 
 
 
@@ -32,7 +33,7 @@ public class HabitLogService {
     }
 
     @Transactional
-    public HabitLog registerHabitLog(long habitId){
+    public HabitLogReturnType registerHabitLog(long habitId){
 
         Optional<Habit> habitFound = habitRepo.findById(habitId);
 
@@ -71,16 +72,16 @@ public class HabitLogService {
 
         try {
             if(checkSavedHabitLog.isPresent()){
-                return checkSavedHabitLog.get();
+                return new HabitLogReturnType(checkSavedHabitLog.get(), false);
             }
 
             habitLogToSave = habitLogRepo.saveAndFlush(habitLogToSave);
 
-            return habitLogToSave;
+            return new HabitLogReturnType(habitLogToSave, true);
 
         } catch (DataIntegrityViolationException d) {
             if (d.getMessage().contains("uk_habit_logs_habit_date")) {
-                throw new IncorrectHabitLogDateException(d.getMessage(), d.getMostSpecificCause());
+                throw new IncorrectHabitLogDateException("The habit already exists for that day.", new Throwable("The habit already exists for that day."));
             } else{
                 throw d;
             }
