@@ -121,11 +121,11 @@ What they cover:
 - [x] Repositories with derived queries
 - [x] Repository integration tests against PostgreSQL
 - [x] Service layer: business rules, transactions and unit tests with Mockito
-  - [ ] User registration (unique email)
-  - [ ] Habit creation
-  - [ ] Log a habit for "today" in the user's time zone
-- [ ] REST API with DTOs and request validation
-- [ ] Global error handling (`@RestControllerAdvice`)
+  - [x] User registration (unique email)
+  - [x] Habit creation
+  - [x] Log a habit for "today" in the user's time zone
+- [x] REST API with DTOs and request validation
+- [x] Global error handling (`@RestControllerAdvice`)
 - [ ] API documentation (OpenAPI)
 - [ ] Dockerfile and CI pipeline
 
