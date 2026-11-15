@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -76,6 +77,20 @@ public class HabitService {
         }
 
         return savedHabit;
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<Habit> getUserActiveHabits(long userId){
+
+        Optional<User> foundUser = userRepo.findById(userId);
+        if(foundUser.isEmpty()){
+            throw new NonExistingUserException("User with id: " + userId + " not found");
+        }
+
+        User user = foundUser.get();
+
+        return habitRepo.findByIsActiveTrueAndUserEqualsOrderByName(user);
 
     }
 }

@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static habits.app.service.HabitService.MAX_DESCRIPTION_LENGTH;
@@ -242,6 +244,54 @@ public class HabitServiceTest {
         Habit createdHabit = assertDoesNotThrow(() -> habitService.registerHabit(id, habit1.getName(), habit1.getDescription()));
 
         assertSame(habit1, createdHabit);
+
+    }
+
+    @Test
+    void C15_when_getting_non_existing_user_habits_throw_non_existing_user_exception(){
+        when(userRepo.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(NonExistingUserException.class, () -> habitService.getUserActiveHabits(id));
+
+        verifyNoInteractions(habitRepo);
+    }
+
+    @Test
+    void C16_when_getting_habits_from_user_who_has_habits_return_correctly_habits(){
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+
+        Habit habit2 = new Habit(user1, "Habit 2", "Study Chinese");
+
+        List<Habit> returnHabitList = new ArrayList<Habit>();
+
+        returnHabitList.add(habit1);
+
+        returnHabitList.add(habit2);
+
+        when(habitRepo.findByIsActiveTrueAndUserEqualsOrderByName(user1)).thenReturn(returnHabitList);
+
+        List<Habit> obtainedHabits = assertDoesNotThrow(() -> habitService.getUserActiveHabits(id));
+
+        assertNotNull(obtainedHabits);
+
+       assertSame(returnHabitList, obtainedHabits);
+
+        verify(userRepo).findById(id);
+    }
+
+    @Test
+    void C17_when_getting_habits_from_user_who_has_not_habits_return_correctly_empty_list(){
+        when(userRepo.findById(id)).thenReturn(Optional.of(user1));
+
+        List<Habit> returnHabitList = new ArrayList<Habit>();
+
+        when(habitRepo.findByIsActiveTrueAndUserEqualsOrderByName(user1)).thenReturn(returnHabitList);
+
+        List<Habit> obtainedHabits = assertDoesNotThrow(() -> habitService.getUserActiveHabits(id));
+
+        assertNotNull(obtainedHabits);
+
+        assertSame(returnHabitList, obtainedHabits);
 
     }
 }
