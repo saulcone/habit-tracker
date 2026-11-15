@@ -126,6 +126,7 @@ What they cover:
   - [x] Log a habit for "today" in the user's time zone
 - [x] REST API with DTOs and request validation
 - [x] Global error handling (`@RestControllerAdvice`)
+- [ ] Get API methods
 - [ ] API documentation (OpenAPI)
 - [ ] Dockerfile and CI pipeline
 
