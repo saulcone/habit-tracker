@@ -5,8 +5,4 @@ public class NonExistingHabitException extends RuntimeException {
         super(message);
     }
 
-    public NonExistingHabitException(String message, Throwable cause) {
-        super(message);
-        this.initCause(cause);
-    }
 }

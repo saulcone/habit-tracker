@@ -1,6 +1,5 @@
 package habits.app.api.controller;
 
-import habits.app.api.dto.HabitLogOut;
 import habits.app.domain.Habit;
 import habits.app.domain.HabitLog;
 import habits.app.domain.User;
@@ -8,25 +7,19 @@ import habits.app.exception.InactiveHabitException;
 import habits.app.exception.IncorrectHabitLogDateException;
 import habits.app.exception.IncorrectZoneIdException;
 import habits.app.exception.NonExistingHabitException;
-import habits.app.repository.HabitLogRepository;
-import habits.app.repository.HabitRepository;
 import habits.app.service.HabitLogReturnType;
 import habits.app.service.HabitLogService;
-import habits.app.service.HabitService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.*;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -67,10 +60,8 @@ public class HabitLogControllerTest {
         habit1 = new Habit(user1, "Habit 1", "Do push ups");
         ReflectionTestUtils.setField(habit1, "id", habitId);
 
-        ZoneId zoneId = ZoneId.of(user1.getTimezone());
-
-        completedAt =  Clock.fixed(NOW, ZoneOffset.UTC).instant();
-        localDate = LocalDate.ofInstant(completedAt, zoneId);
+        completedAt = NOW;
+        localDate = LocalDate.of(2026, 11, 6);
 
         habitLog1 = new HabitLog(habit1, HabitLog.Status.CHECKED, completedAt, localDate);
         ReflectionTestUtils.setField(habitLog1, "id", habitLogId);
@@ -147,7 +138,7 @@ public class HabitLogControllerTest {
     @Test
     void C5_when_creating_log_and_race_condition_creating_log_receive_409_code() throws Exception{
 
-        String expectedMessage = "The habit with id " + habitId + " doesn't exist.The habit already exists for that day.";
+        String expectedMessage = "The habit already exists for that day.";
 
         IncorrectHabitLogDateException returnException = new IncorrectHabitLogDateException(expectedMessage);
 

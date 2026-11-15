@@ -7,7 +7,6 @@ import habits.app.exception.*;
 import habits.app.repository.HabitLogRepository;
 import habits.app.repository.HabitRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -5,8 +5,4 @@ public class NonExistingUserException extends RuntimeException     {
         super(message);
     }
 
-    public NonExistingUserException(String message, Throwable cause){
-        super(message);
-        this.initCause(cause);
-    }
 }

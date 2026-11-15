@@ -6,9 +6,4 @@ public class EmptyFieldException extends RuntimeException {
         super(message);
     }
 
-    public EmptyFieldException(String message, Throwable cause) {
-
-        super(message);
-        this.initCause(cause);
-    }
 }
