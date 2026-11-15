@@ -13,10 +13,15 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static habits.app.service.HabitService.MAX_DESCRIPTION_LENGTH;
 import static habits.app.service.HabitService.MAX_NAME_LENGTH;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -345,6 +350,85 @@ public class HabitControllerTest {
                 .andExpect(jsonPath("$.userId").value(userId));
 
         verify(habitService).registerHabit(userId, name, null);
+    }
+
+    @Test
+    void C13_when_getting_habits_from_user_with_two_habits_obtain_habits_and_200_code() throws Exception{
+
+        String email = "mail@test.com";
+        String timezone = "Europe/Madrid";
+
+        User user = new User(email, timezone);
+
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        Habit habitReturn1 = new Habit(user, "Habit 1", "Description 1.");
+
+        ReflectionTestUtils.setField(habitReturn1, "id", 7L);
+
+        Habit habitReturn2 = new Habit(user, "Habit 2", "Description 2.");
+
+        ReflectionTestUtils.setField(habitReturn2, "id", 8L);
+
+        List<Habit> habitsReturn = new ArrayList<>();
+
+        habitsReturn.add(habitReturn1);
+        habitsReturn.add(habitReturn2);
+
+        when(habitService.getUserActiveHabits(userId)).thenReturn(habitsReturn);
+
+        mockMvc.perform(get("/api/v1/users/{userId}/habits", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name").value(habitReturn1.getName()))
+                .andExpect(jsonPath("$[1].name").value(habitReturn2.getName()))
+                .andExpect(jsonPath("$[0].id").value(habitReturn1.getId()))
+                .andExpect(jsonPath("$[1].id").value(habitReturn2.getId()))
+                .andExpect(jsonPath("$[0].userId").value(userId))
+                .andExpect(jsonPath("$[1].userId").value(userId))
+                .andExpect(jsonPath("$[0].description").value(habitReturn1.getDescription()))
+                .andExpect(jsonPath("$[1].description").value(habitReturn2.getDescription()));
+
+        verify(habitService).getUserActiveHabits(userId);
+    }
+
+    @Test
+    void C14_when_getting_habits_from_user_with_no_habits_obtain_empty_list_and_200_code() throws Exception{
+
+        when(habitService.getUserActiveHabits(userId)).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/api/v1/users/{userId}/habits", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+
+        verify(habitService).getUserActiveHabits(userId);
+    }
+
+    @Test
+    void C15_when_getting_habits_from_non_existing_user_404_code() throws Exception{
+
+        String expectedMessage = "User with id: " + userId + " not found";
+
+        NonExistingUserException returnException = new NonExistingUserException(expectedMessage);
+
+        when(habitService.getUserActiveHabits(userId)).thenThrow(returnException);
+
+        mockMvc.perform(get("/api/v1/users/{userId}/habits", userId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value(expectedMessage));
+
+        verify(habitService).getUserActiveHabits(userId);
+    }
+
+    @Test
+    void C16_when_getting_habits_with_non_long_format_user_id_400_code() throws Exception{
+
+        String incorrectId = "abcd";
+
+        mockMvc.perform(get("/api/v1/users/{userId}/habits", incorrectId))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(habitService);
     }
 
 }

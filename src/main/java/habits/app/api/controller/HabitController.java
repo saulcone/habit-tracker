@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/users/{userId}/habits")
 public class HabitController {
@@ -27,4 +30,20 @@ public class HabitController {
         return new HabitOut(habitRegistered.getId(), userId, habitRegistered.getName(), habitRegistered.getDescription(), habitRegistered.getCreatedAt());
 
     }
+
+    @GetMapping
+    public List<HabitOut> getActiveUserHabits(@PathVariable long userId){
+
+        List<Habit> habitsObtained = habitService.getUserActiveHabits(userId);
+
+        List<HabitOut> returnHabits = new ArrayList<>();
+
+        for(Habit element : habitsObtained){
+            returnHabits.add(new HabitOut(element.getId(), userId, element.getName(), element.getDescription(), element.getCreatedAt()));
+        }
+
+        return returnHabits;
+    }
 }
+
+
