@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -86,5 +87,23 @@ public class HabitLogService {
             }
         }
 
+    }
+
+    @Transactional(readOnly = true)
+    public List<HabitLog> getHabitLogsBetweenDates(LocalDate begin, LocalDate end, long habitId){
+
+        if(begin.isAfter(end)){
+            throw new InvalidDatePeriodException("The beginning date: " + begin + " is after the end period date: " + end);
+        }
+
+        Optional<Habit> habitObtained = habitRepo.findById(habitId);
+
+        if(habitObtained.isEmpty()){
+            throw new NonExistingHabitException("The habit with id " + habitId + " doesn't exist.");
+        }
+
+        Habit habit = habitObtained.get();
+
+        return habitLogRepo.findByLocalDateBetweenAndHabitEqualsOrderByLocalDate(begin, end, habit);
     }
 }

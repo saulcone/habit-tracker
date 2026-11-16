@@ -3,10 +3,7 @@ package habits.app.api.controller;
 import habits.app.domain.Habit;
 import habits.app.domain.HabitLog;
 import habits.app.domain.User;
-import habits.app.exception.InactiveHabitException;
-import habits.app.exception.IncorrectHabitLogDateException;
-import habits.app.exception.IncorrectZoneIdException;
-import habits.app.exception.NonExistingHabitException;
+import habits.app.exception.*;
 import habits.app.service.HabitLogReturnType;
 import habits.app.service.HabitLogService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +16,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -216,6 +217,131 @@ public class HabitLogControllerTest {
         verifyNoInteractions(habitLogService);
     }
 
+    @Test
+    void C10_when_getting_logs_from_between_two_correct_dates_return_two_logs_without_error() throws Exception{
 
+        LocalDate beginTest = LocalDate.of(2000, 11, 1);
+
+        LocalDate endTest = LocalDate.of(2000, 11, 10);
+
+        HabitLog habitLog2 = new HabitLog(habit1, HabitLog.Status.CHECKED, Instant.parse("2026-11-07T10:30:00Z"), LocalDate.of(2026, 11, 7));
+
+        ReflectionTestUtils.setField(habitLog2, "id", 8L);
+
+        List<HabitLog> returnLogs = new ArrayList<>();
+
+        returnLogs.add(habitLog1);
+        returnLogs.add(habitLog2);
+
+        when(habitLogService.getHabitLogsBetweenDates(beginTest, endTest, habitId)).thenReturn(returnLogs);
+
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", habitId).param("begin", beginTest.toString()).param("end", endTest.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+
+                .andExpect(jsonPath("$[0].id").value(habitLog1.getId()))
+                .andExpect(jsonPath("$[0].completedAt").value("2026-11-05T23:30:00Z"))
+                .andExpect(jsonPath("$[0].status").value("CHECKED"))
+                .andExpect(jsonPath("$[0].localDate").value(habitLog1.getLocalDate().toString()))
+                .andExpect(jsonPath("$[0].habitId").value(habitId))
+                .andExpect(jsonPath("$[1].id").value(habitLog2.getId()))
+                .andExpect(jsonPath("$[1].completedAt").value("2026-11-07T10:30:00Z"))
+                .andExpect(jsonPath("$[1].status").value("CHECKED"))
+                .andExpect(jsonPath("$[1].localDate").value(habitLog2.getLocalDate().toString()))
+                .andExpect(jsonPath("$[1].habitId").value(habitId));
+
+        verify(habitLogService).getHabitLogsBetweenDates(beginTest, endTest, habitId);
+    }
+
+    @Test
+    void C11_when_getting_logs_from_between_two_correct_dates_return_empty_list_without_error() throws Exception{
+
+        LocalDate beginTest = LocalDate.of(2000, 11, 1);
+
+        LocalDate endTest = LocalDate.of(2000, 11, 10);
+
+        List<HabitLog> returnLogs = new ArrayList<>();
+
+
+        when(habitLogService.getHabitLogsBetweenDates(beginTest, endTest, habitId)).thenReturn(returnLogs);
+
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", habitId).param("begin", beginTest.toString()).param("end", endTest.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+
+        verify(habitLogService).getHabitLogsBetweenDates(beginTest, endTest, habitId);
+    }
+
+    @Test
+    void C12_when_getting_logs_from_incorrect_period_dates_then_throw_invalid_date_period_exception() throws Exception{
+
+        LocalDate beginTest = LocalDate.of(2000, 11, 10);
+
+        LocalDate endTest = LocalDate.of(2000, 11, 1);
+
+        String expectedMessage = "The beginning date: " + beginTest + " is after the end period date: " + endTest;
+
+        InvalidDatePeriodException thrownException = new InvalidDatePeriodException(expectedMessage);
+
+        when(habitLogService.getHabitLogsBetweenDates(beginTest, endTest, habitId)).thenThrow(thrownException);
+
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", habitId).param("begin", beginTest.toString()).param("end", endTest.toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(expectedMessage));
+
+        verify(habitLogService).getHabitLogsBetweenDates(beginTest, endTest, habitId);
+    }
+
+    @Test
+    void C13_when_getting_logs_from_incorrect_period_dates_then_throw_non_existing_habit_exception_and_404_code() throws Exception{
+
+        LocalDate beginTest = LocalDate.of(2000, 11, 1);
+
+        LocalDate endTest = LocalDate.of(2000, 11, 10);
+
+        String expectedMessage = "The habit with id " + habitId + " doesn't exist.";
+
+        NonExistingHabitException thrownException = new NonExistingHabitException(expectedMessage);
+
+        when(habitLogService.getHabitLogsBetweenDates(beginTest, endTest, habitId)).thenThrow(thrownException);
+
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", habitId).param("begin", beginTest.toString()).param("end", endTest.toString()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value(expectedMessage));
+
+        verify(habitLogService).getHabitLogsBetweenDates(beginTest, endTest, habitId);
+    }
+
+    @Test
+    void C14_when_getting_logs_with_incorrect_habitId_format_return_400_code() throws Exception{
+
+        LocalDate beginTest = LocalDate.of(2000, 11, 1);
+
+        LocalDate endTest = LocalDate.of(2000, 11, 10);
+
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", "ABDC").param("begin", beginTest.toString()).param("end", endTest.toString()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(habitLogService);
+    }
+
+    @Test
+    void C15_when_getting_logs_with_lacking_parameters_format_return_400_code() throws Exception{
+
+        LocalDate beginTest = LocalDate.of(2000, 11, 10);
+
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", habitId).param("begin", beginTest.toString()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(habitLogService);
+    }
+
+    @Test
+    void C16_when_getting_logs_with_invalid_parameters_format_return_400_code() throws Exception{
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", habitId).param("begin", "begin date").param("end", "final date"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(habitLogService);
+    }
 
 }

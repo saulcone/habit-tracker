@@ -4,12 +4,14 @@ import habits.app.api.dto.HabitLogOut;
 import habits.app.domain.HabitLog;
 import habits.app.service.HabitLogReturnType;
 import habits.app.service.HabitLogService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/habits/{habitId}/logs")
@@ -35,5 +37,19 @@ public class HabitLogController {
         }
 
         else return ResponseEntity.ok(returnHabitLog);
+    }
+
+    @GetMapping
+    public List<HabitLogOut> getHabitLogs(@PathVariable long habitId, @RequestParam("begin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate begin, @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end){
+
+        List<HabitLog> obtainedHabitLogs = habitLogService.getHabitLogsBetweenDates(begin, end, habitId);
+
+        List<HabitLogOut> returnLogs = new ArrayList<>();
+
+        for(HabitLog habitLog : obtainedHabitLogs){
+            returnLogs.add(new HabitLogOut(habitLog.getId(), habitId, habitLog.getStatus(), habitLog.getCompletedAt(), habitLog.getLocalDate()));
+        }
+
+        return returnLogs;
     }
 }

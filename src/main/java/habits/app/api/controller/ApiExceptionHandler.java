@@ -15,7 +15,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler{
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
-    @ExceptionHandler({InvalidTimezoneException.class, EmptyFieldException.class, NullFieldException.class, FieldTooLongException.class, InvalidNameException.class, InvalidDescriptionException.class})
+    @ExceptionHandler({InvalidTimezoneException.class, EmptyFieldException.class, NullFieldException.class, FieldTooLongException.class, InvalidNameException.class, InvalidDescriptionException.class, InvalidDatePeriodException.class})
     public ProblemDetail handle400(RuntimeException exception){
         return ProblemDetail.forStatusAndDetail(HttpStatusCode.valueOf(400), exception.getMessage());
     }

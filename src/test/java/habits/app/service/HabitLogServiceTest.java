@@ -21,6 +21,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -264,5 +265,60 @@ public class HabitLogServiceTest {
                 () -> assertEquals(exceptionMessage, exceptionReceived.getMessage()),
                 () -> assertSame(exceptionThrown, exceptionReceived)
         );
+    }
+
+    @Test
+    void C9_when_getting_habit_logs_between_incorrect_begin_and_end_date_throw_invalid_date_period_exception(){
+
+        LocalDate beginTest = LocalDate.of(2000, 10, 20);
+
+        LocalDate endTest = LocalDate.of(2000, 10, 1);
+
+        assertThrows(InvalidDatePeriodException.class, () -> habitLogService.getHabitLogsBetweenDates(beginTest, endTest, id));
+
+        verifyNoInteractions(habitRepo, habitLogRepo);
+    }
+
+    @Test
+    void C10_when_getting_habit_logs_between_same_begin_date_than_end_date_return_log_without_error(){
+
+        LocalDate beginTest = LocalDate.of(2000, 10, 20);
+
+        LocalDate endTest = LocalDate.of(2000, 10, 20);
+
+        when(habitRepo.findById(id)).thenReturn(Optional.of(habit1));
+
+        List<HabitLog> returnList = new ArrayList<HabitLog>();
+
+        returnList.add(habitLog1);
+
+        when(habitLogRepo.findByLocalDateBetweenAndHabitEqualsOrderByLocalDate(beginTest, endTest, habit1)).thenReturn(returnList);
+
+        List<HabitLog> obtainedList = assertDoesNotThrow(() -> habitLogService.getHabitLogsBetweenDates(beginTest, endTest, id));
+
+        assertSame(returnList, obtainedList);
+
+        verify(habitRepo).findById(id);
+        verify(habitLogRepo).findByLocalDateBetweenAndHabitEqualsOrderByLocalDate(beginTest, endTest, habit1);
+    }
+
+    @Test
+    void C11_when_getting_habit_logs_from_non_existing_habit_throw_non_existing_habit_exception(){
+        LocalDate beginTest = LocalDate.of(2000, 10, 20);
+
+        LocalDate endTest = LocalDate.of(2000, 10, 20);
+
+        String expectedMessage = "The habit with id " + id + " doesn't exist.";
+
+        when(habitRepo.findById(id)).thenReturn(Optional.empty());
+
+        NonExistingHabitException obtainedException = assertThrows(NonExistingHabitException.class, () -> habitLogService.getHabitLogsBetweenDates(beginTest, endTest, id));
+
+        assertEquals(expectedMessage, obtainedException.getMessage());
+
+        verify(habitRepo).findById(id);
+
+        verifyNoInteractions(habitLogRepo);
+
     }
 }
