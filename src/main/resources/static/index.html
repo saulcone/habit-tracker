@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habit Tracker</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1c2430; --muted: #6b7686;
+    --line: #e3e7ed; --accent: #2f7d5b; --accent-ink: #ffffff;
+    --dot-off: #e3e7ed; --danger: #b3382c; --danger-bg: #fbeceb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --card: #1a2029; --text: #e8ecf1; --muted: #8b97a8;
+      --line: #2a3340; --accent: #45a97c; --accent-ink: #0c1a13;
+      --dot-off: #2a3340; --danger: #f0867b; --danger-bg: #3a1f1c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: .9rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 10px 0 4px; }
+  input {
+    width: 100%; padding: 10px 12px; font: inherit; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button {
+    font: inherit; cursor: pointer; padding: 9px 14px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--card); color: var(--text);
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.link { border: none; background: none; color: var(--muted); padding: 4px 6px; text-decoration: underline; }
+  button:disabled { opacity: .55; cursor: default; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > input { flex: 1; }
+  .between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .or { text-align: center; color: var(--muted); font-size: .85rem; margin: 16px 0 4px; }
+  .error {
+    background: var(--danger-bg); color: var(--danger); border-radius: 8px;
+    padding: 10px 12px; margin-bottom: 16px; font-size: .92rem;
+  }
+  .habit h3 { margin: 0; font-size: 1rem; }
+  .habit p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+  .strip { display: flex; gap: 3px; margin-top: 12px; flex-wrap: wrap; }
+  .dot { width: 14px; height: 14px; border-radius: 4px; background: var(--dot-off); }
+  .dot.on { background: var(--accent); }
+  .dot.today { outline: 2px solid var(--muted); outline-offset: 1px; }
+  .done { color: var(--accent); font-weight: 600; font-size: .9rem; white-space: nowrap; }
+  .empty { color: var(--muted); text-align: center; padding: 8px 0; }
+  select {
+    width: 100%; padding: 10px 12px; font: inherit; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+  }
+  select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .log-list { list-style: none; padding: 0; margin: 14px 0 0; }
+  .log-list li {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 8px 0; border-top: 1px solid var(--line); font-size: .92rem;
+  }
+  .log-list .when { color: var(--muted); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Habit Tracker</h1>
+  <p class="sub" id="subtitle">Registra tus hábitos día a día.</p>
+
+  <div id="error" class="error hidden" role="alert"></div>
+
+  <!-- Pantalla de acceso -->
+  <section id="login" class="hidden">
+    <div class="card">
+      <h2>Crear usuario</h2>
+      <form id="register-form">
+        <label for="email">Email</label>
+        <input id="email" type="email" required autocomplete="email">
+        <label for="tz">Zona horaria (IANA)</label>
+        <input id="tz" type="text" required placeholder="Europe/Madrid">
+        <div style="margin-top:14px"><button class="primary" type="submit">Crear y entrar</button></div>
+      </form>
+      <div class="or">o, si ya tienes un usuario</div>
+      <form id="enter-form" style="margin-top:8px">
+        <div class="row">
+          <input id="user-id" type="number" min="1" required placeholder="Tu id de usuario" aria-label="Id de usuario">
+          <input id="enter-tz" type="text" required placeholder="Tu zona horaria" aria-label="Zona horaria">
+          <button type="submit">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Pantalla principal -->
+  <section id="app" class="hidden">
+    <div class="between" style="margin-bottom:16px">
+      <div>
+        <strong id="who"></strong>
+        <div class="sub" style="margin:0" id="who-tz"></div>
+      </div>
+      <button class="link" id="logout" type="button">Salir</button>
+    </div>
+
+    <div class="card">
+      <h2>Nuevo hábito</h2>
+      <form id="habit-form">
+        <label for="h-name">Nombre</label>
+        <input id="h-name" type="text" required maxlength="100">
+        <label for="h-desc">Descripción (opcional)</label>
+        <input id="h-desc" type="text">
+        <div style="margin-top:14px"><button class="primary" type="submit">Añadir</button></div>
+      </form>
+    </div>
+
+    <h2>Hábitos activos</h2>
+    <div id="habits"></div>
+
+    <div class="card" id="logs-card">
+      <h2>Registros</h2>
+      <form id="logs-form">
+        <label for="l-habit">Hábito</label>
+        <select id="l-habit" required></select>
+        <div class="row" style="margin-top:10px">
+          <div style="flex:1">
+            <label for="l-begin" style="margin-top:0">Desde</label>
+            <input id="l-begin" type="date" required>
+          </div>
+          <div style="flex:1">
+            <label for="l-end" style="margin-top:0">Hasta</label>
+            <input id="l-end" type="date" required>
+          </div>
+        </div>
+        <div style="margin-top:14px"><button class="primary" type="submit">Ver registros</button></div>
+      </form>
+      <ul id="l-result" class="log-list"></ul>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const API = '/api/v1';
+  const DAYS = 30;
+  const $ = (id) => document.getElementById(id);
+  let user = null; // { id, email, timezone }
+
+  // ---------- utilidades ----------
+  function showError(msg) {
+    const el = $('error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function clearError() { $('error').classList.add('hidden'); }
+
+  async function api(path, options = {}) {
+    let res;
+    try {
+      res = await fetch(API + path, options);
+    } catch {
+      throw new Error('No se puede conectar con el servidor.');
+    }
+    if (res.ok) return { status: res.status, body: await res.json() };
+    let detail = 'Error inesperado (' + res.status + ').';
+    try {
+      const problem = await res.json();
+      if (problem.detail) detail = problem.detail;
+    } catch { /* cuerpo vacío o no JSON */ }
+    throw new Error(detail);
+  }
+  const postJson = (path, data) => api(path, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+  });
+
+  // "Hoy" en la zona horaria del usuario, como YYYY-MM-DD (igual que calcula el backend).
+  function todayIn(tz) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
+  }
+  function shiftDate(iso, days) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+  }
+
+  // ---------- sesión ----------
+  function saveUser(u) {
+    user = u;
+    try { localStorage.setItem('habitUser', JSON.stringify(u)); } catch { /* sin storage */ }
+  }
+  function loadUser() {
+    try { return JSON.parse(localStorage.getItem('habitUser')); } catch { return null; }
+  }
+  function logout() {
+    user = null;
+    try { localStorage.removeItem('habitUser'); } catch { /* sin storage */ }
+    render();
+  }
+
+  // ---------- pantallas ----------
+  function render() {
+    clearError();
+    $('login').classList.toggle('hidden', !!user);
+    $('app').classList.toggle('hidden', !user);
+    if (!user) {
+      const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      $('tz').value = $('tz').value || browserTz;
+      $('enter-tz').value = $('enter-tz').value || browserTz;
+      return;
+    }
+    $('who').textContent = user.email;
+    $('who-tz').textContent = user.timezone;
+    loadHabits();
+  }
+
+  async function loadHabits() {
+    const box = $('habits');
+    try {
+      const { body: habits } = await api('/users/' + user.id + '/habits');
+      box.replaceChildren();
+      $('logs-card').classList.toggle('hidden', habits.length === 0);
+      if (habits.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'empty';
+        p.textContent = 'Aún no tienes hábitos. Crea el primero arriba.';
+        box.append(p);
+        return;
+      }
+      const today = todayIn(user.timezone);
+      const begin = shiftDate(today, -(DAYS - 1));
+      fillLogsForm(habits, today, begin);
+      const logsPerHabit = await Promise.all(habits.map((h) =>
+        api('/habits/' + h.id + '/logs?begin=' + begin + '&end=' + today).then((r) => r.body)));
+      habits.forEach((h, i) => box.append(habitCard(h, logsPerHabit[i], today, begin)));
+    } catch (e) {
+      // Si el usuario guardado ya no existe, volvemos a la pantalla de acceso.
+      showError(e.message);
+      if (/not found/i.test(e.message)) logout();
+    }
+  }
+
+  // Rellena el selector de hábitos conservando la selección y fija el rango por defecto.
+  function fillLogsForm(habits, today, begin) {
+    const select = $('l-habit');
+    const previous = select.value;
+    select.replaceChildren();
+    habits.forEach((h) => {
+      const opt = document.createElement('option');
+      opt.value = h.id;
+      opt.textContent = h.name;
+      select.append(opt);
+    });
+    if (habits.some((h) => String(h.id) === previous)) select.value = previous;
+    if (!$('l-begin').value) $('l-begin').value = begin;
+    if (!$('l-end').value) $('l-end').value = today;
+  }
+
+  function habitCard(habit, logs, today, begin) {
+    const done = new Set(logs.map((l) => l.localDate));
+    const card = document.createElement('div');
+    card.className = 'card habit';
+
+    const head = document.createElement('div');
+    head.className = 'between';
+    const info = document.createElement('div');
+    const h3 = document.createElement('h3');
+    h3.textContent = habit.name;
+    info.append(h3);
+    if (habit.description) {
+      const p = document.createElement('p');
+      p.textContent = habit.description;
+      info.append(p);
+    }
+    head.append(info, doneControl(habit, done.has(today)));
+
+    const strip = document.createElement('div');
+    strip.className = 'strip';
+    strip.setAttribute('aria-label', 'Últimos ' + DAYS + ' días');
+    for (let i = 0; i < DAYS; i++) {
+      const day = shiftDate(begin, i);
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (done.has(day) ? ' on' : '') + (day === today ? ' today' : '');
+      dot.title = day + (done.has(day) ? ' · hecho' : '');
+      strip.append(dot);
+    }
+    card.append(head, strip);
+    return card;
+  }
+
+  function doneControl(habit, isDone) {
+    if (isDone) {
+      const span = document.createElement('span');
+      span.className = 'done';
+      span.textContent = '✓ Hecho hoy';
+      return span;
+    }
+    const btn = document.createElement('button');
+    btn.className = 'primary';
+    btn.type = 'button';
+    btn.textContent = 'Hecho hoy';
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      clearError();
+      try {
+        await api('/habits/' + habit.id + '/logs', { method: 'POST' }); // 201 o 200, ambos valen
+        loadHabits();
+      } catch (e) {
+        showError(e.message);
+        btn.disabled = false;
+      }
+    });
+    return btn;
+  }
+
+  // ---------- formularios ----------
+  $('register-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    clearError();
+    try {
+      const { body } = await postJson('/users', {
+        email: $('email').value.trim(), timezone: $('tz').value.trim()
+      });
+      saveUser({ id: body.id, email: body.email, timezone: body.timezone });
+      render();
+    } catch (e) { showError(e.message); }
+  });
+
+  // No existe endpoint para consultar un usuario por id: se confirma que existe
+  // pidiendo sus hábitos, y la zona horaria se pregunta en ese caso.
+  $('enter-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    clearError();
+    const id = Number($('user-id').value);
+    const tz = $('enter-tz').value.trim();
+    try {
+      await api('/users/' + id + '/habits');
+      saveUser({ id, email: 'Usuario #' + id, timezone: tz });
+      render();
+    } catch (e) { showError(e.message); }
+  });
+
+  $('habit-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    clearError();
+    const data = { name: $('h-name').value.trim() };
+    const desc = $('h-desc').value.trim();
+    if (desc) data.description = desc;
+    try {
+      await postJson('/users/' + user.id + '/habits', data);
+      $('habit-form').reset();
+      loadHabits();
+    } catch (e) { showError(e.message); }
+  });
+
+  $('logs-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    clearError();
+    const list = $('l-result');
+    try {
+      const { body: logs } = await api('/habits/' + $('l-habit').value + '/logs?begin='
+        + encodeURIComponent($('l-begin').value) + '&end=' + encodeURIComponent($('l-end').value));
+      list.replaceChildren();
+      if (logs.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'empty';
+        li.textContent = 'No hay registros en ese periodo.';
+        list.append(li);
+        return;
+      }
+      logs.forEach((l) => {
+        const li = document.createElement('li');
+        const day = document.createElement('span');
+        day.textContent = l.localDate + ' · ' + (l.status === 'CHECKED' ? 'Hecho' : l.status);
+        const when = document.createElement('span');
+        when.className = 'when';
+        when.textContent = new Date(l.completedAt).toLocaleTimeString('es-ES',
+          { hour: '2-digit', minute: '2-digit', timeZone: user.timezone });
+        li.append(day, when);
+        list.append(li);
+      });
+    } catch (e) { showError(e.message); }
+  });
+
+  $('logout').addEventListener('click', logout);
+
+  user = loadUser();
+  render();
+})();
+</script>
+</body>
+</html>
