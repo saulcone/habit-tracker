@@ -19,8 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static habits.app.service.HabitService.MAX_DESCRIPTION_LENGTH;
-import static habits.app.service.HabitService.MAX_NAME_LENGTH;
+import static habits.app.service.HabitService.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -169,7 +168,7 @@ public class HabitServiceTest {
     @Test
     void C9_saving_habit_from_same_user_with_same_name_throw_existing_habit_for_that_user(){
 
-        DataIntegrityViolationException thrownException = new DataIntegrityViolationException("uk_habit_user_name_constraint");
+        DataIntegrityViolationException thrownException = new DataIntegrityViolationException(errorDB);
 
         when(userRepo.findById(id)).thenReturn(Optional.of(user1));
         when(habitRepo.saveAndFlush(any(Habit.class))).thenThrow(thrownException);

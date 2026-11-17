@@ -81,7 +81,7 @@ public class HabitLogService {
 
         } catch (DataIntegrityViolationException d) {
             if (d.getMessage().contains("uk_habit_logs_habit_date")) {
-                throw new IncorrectHabitLogDateException("The habit already exists for that day.", new Throwable("The habit already exists for that day."));
+                throw new IncorrectHabitLogDateException("The habit already exists for that day.", d.getCause());
             } else{
                 throw d;
             }

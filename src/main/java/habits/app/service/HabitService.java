@@ -17,6 +17,8 @@ import java.util.Optional;
 @Service
 public class HabitService {
 
+    public static final String errorDB = "uk_habits_user_name";
+
     public static final int MAX_NAME_LENGTH = 100;
 
     public static final int MAX_DESCRIPTION_LENGTH = 300;
@@ -68,7 +70,7 @@ public class HabitService {
         try{
             savedHabit = habitRepo.saveAndFlush(habit);
         }catch(DataIntegrityViolationException d){
-            if(d.getMessage().contains("uk_habit_user_name")){
+            if(d.getMessage().contains(errorDB)){
                 throw new ExistingHabitForThatUserException("Habit's name already existing.", d.getCause());
             }
 
