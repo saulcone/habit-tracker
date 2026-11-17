@@ -4,12 +4,13 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)
 ![Build](https://img.shields.io/badge/build-Maven-C71A36)
+[![CI](https://github.com/saulcone/habit-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/saulcone/habit-tracker/actions/workflows/ci.yml)
 
 A habit tracking backend built with **Java 21 and Spring Boot**. Users define habits and log their progress day by day, with each day computed in the **user's own time zone**.
 
 This is a learning project: the goal is to build a solid foundation in Spring Boot (persistence, migrations, services, REST API, testing, layered design) by implementing each layer deliberately and testing it.
 
-> **Status:** the persistence layer, the service layer and the REST API (5 endpoints) are complete and tested. Remaining work: API documentation and CI (see the [roadmap](#roadmap)).
+> **Status:** the persistence layer, the service layer, the REST API (5 endpoints), a basic web front end and a CI pipeline are complete and tested. Remaining work: API documentation (see the [roadmap](#roadmap)).
 
 ## Tech stack
 
@@ -20,7 +21,9 @@ This is a learning project: the goal is to build a solid foundation in Spring Bo
 | Database | PostgreSQL 16 |
 | Migrations | Flyway |
 | Testing | JUnit 5, Mockito, `@DataJpaTest`, `@WebMvcTest`, MockMvc |
+| Front end | Single static HTML page with vanilla JavaScript (no build step) |
 | Build | Maven (wrapper included) |
+| CI | GitHub Actions |
 | Local infra | Docker Compose |
 
 ## Data model
@@ -118,6 +121,17 @@ All errors use the standard **Problem Details** format (RFC 9457, `application/p
 
 Database unique constraints are translated into business errors (`409`) by the service layer; any other integrity violation is rethrown and ends up as a `500`.
 
+## Web front end
+
+A basic single-page UI is served by the application itself at `http://localhost:8080/`, so it shares the origin with the API and needs no CORS configuration. It lets you:
+
+- create a user (the time zone is prefilled from the browser) or continue with an existing user id,
+- create habits and list the active ones,
+- mark a habit as done for today (`Done today` button) and see the last 30 days at a glance,
+- browse the logs of a habit between two dates.
+
+The session (user id and time zone) is kept in the browser's `localStorage`. There is no authentication, and the API has no endpoint to fetch a user by id, so when continuing with an existing id the page asks for the time zone.
+
 ## Project structure
 
 ```
@@ -132,6 +146,7 @@ src/main/java/habits/app
 
 src/main/resources
 ├── application.yml
+├── static           # Web front end (index.html)
 └── db/migration     # Flyway migrations
 
 src/test/java/habits/app
@@ -159,7 +174,7 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-The API is then available at `http://localhost:8080/api/v1`. The database settings live in `src/main/resources/application.yml` and match the `docker-compose.yml` file. The credentials in this repository are for **local development only**.
+The web UI is then available at `http://localhost:8080/` and the API at `http://localhost:8080/api/v1`. The database settings live in `src/main/resources/application.yml` and match the `docker-compose.yml` file. The credentials in this repository are for **local development only**.
 
 ### Run the tests
 
@@ -167,6 +182,10 @@ The API is then available at `http://localhost:8080/api/v1`. The database settin
 docker compose up -d   # the repository tests use the same local PostgreSQL
 ./mvnw test
 ```
+
+## Continuous integration
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push to `main` and on every pull request targeting `main`. It starts a PostgreSQL 16 service container, sets up Java 21 and runs `./mvnw verify`, so the whole test suite (including the database tests) runs against a real PostgreSQL on each change.
 
 ## Testing approach
 
@@ -189,10 +208,12 @@ The project has three kinds of tests, one per layer:
 - [x] REST API with DTOs and request validation
 - [x] Global error handling (`@RestControllerAdvice`)
 - [x] Read endpoints (active habits, logs between two dates)
+- [x] CI pipeline (GitHub Actions)
+- [x] Basic web front end
 - [ ] API documentation (OpenAPI / Swagger UI)
-- [X] Dockerfile and CI pipeline (GitHub Actions)
+- [ ] Dockerfile
 
-Out of scope for now: authentication, CORS and a front end.
+Out of scope for now: authentication and CORS.
 
 ## Author
 
