@@ -220,9 +220,9 @@ public class HabitLogControllerTest {
     @Test
     void C10_when_getting_logs_from_between_two_correct_dates_return_two_logs_without_error() throws Exception{
 
-        LocalDate beginTest = LocalDate.of(2000, 11, 1);
+        LocalDate beginTest = LocalDate.of(2026, 11, 1);
 
-        LocalDate endTest = LocalDate.of(2000, 11, 10);
+        LocalDate endTest = LocalDate.of(2026, 11, 10);
 
         HabitLog habitLog2 = new HabitLog(habit1, HabitLog.Status.CHECKED, Instant.parse("2026-11-07T10:30:00Z"), LocalDate.of(2026, 11, 7));
 
@@ -293,7 +293,7 @@ public class HabitLogControllerTest {
     }
 
     @Test
-    void C13_when_getting_logs_from_incorrect_period_dates_then_throw_non_existing_habit_exception_and_404_code() throws Exception{
+    void C13_when_getting_logs_and_habit_doesnt_exist_return_404_code() throws Exception{
 
         LocalDate beginTest = LocalDate.of(2000, 11, 1);
 
@@ -319,7 +319,7 @@ public class HabitLogControllerTest {
 
         LocalDate endTest = LocalDate.of(2000, 11, 10);
 
-        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", "ABDC").param("begin", beginTest.toString()).param("end", endTest.toString()))
+        mockMvc.perform(get("/api/v1/habits/{habitId}/logs", "ABCD").param("begin", beginTest.toString()).param("end", endTest.toString()))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(habitLogService);
