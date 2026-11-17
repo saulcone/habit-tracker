@@ -190,7 +190,7 @@ The project has three kinds of tests, one per layer:
 - [x] Global error handling (`@RestControllerAdvice`)
 - [x] Read endpoints (active habits, logs between two dates)
 - [ ] API documentation (OpenAPI / Swagger UI)
-- [ ] Dockerfile and CI pipeline (GitHub Actions)
+- [X] Dockerfile and CI pipeline (GitHub Actions)
 
 Out of scope for now: authentication, CORS and a front end.
 
