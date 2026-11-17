@@ -10,7 +10,7 @@ A habit tracking backend built with **Java 21 and Spring Boot**. Users define ha
 
 This is a learning project: the goal is to build a solid foundation in Spring Boot (persistence, migrations, services, REST API, testing, layered design) by implementing each layer deliberately and testing it.
 
-> **Status:** the persistence layer, the service layer, the REST API (5 endpoints), a basic web front end and a CI pipeline are complete and tested. Remaining work: API documentation (see the [roadmap](#roadmap)).
+> **Status:** the persistence layer, the service layer, the REST API (5 endpoints) with OpenAPI documentation, a basic web front end and a CI pipeline are complete and tested (see the [roadmap](#roadmap)).
 
 ## Tech stack
 
@@ -21,6 +21,7 @@ This is a learning project: the goal is to build a solid foundation in Spring Bo
 | Database | PostgreSQL 16 |
 | Migrations | Flyway |
 | Testing | JUnit 5, Mockito, `@DataJpaTest`, `@WebMvcTest`, MockMvc |
+| API docs | OpenAPI 3 with Swagger UI (springdoc-openapi) |
 | Front end | Single static HTML page with vanilla JavaScript (no build step) |
 | Build | Maven (wrapper included) |
 | CI | GitHub Actions |
@@ -76,6 +77,8 @@ Base path: `/api/v1`. Requests and responses are JSON.
 | `GET` | `/users/{userId}/habits` | List the user's active habits, ordered by name | `200` | `400`, `404` |
 | `POST` | `/habits/{habitId}/logs` | Log the habit for "today" in the user's time zone | `201` new, `200` already logged | `400`, `404`, `409` |
 | `GET` | `/habits/{habitId}/logs?begin=YYYY-MM-DD&end=YYYY-MM-DD` | List a habit's logs between two dates (inclusive), ordered by date | `200` | `400`, `404` |
+
+Interactive documentation is generated from the code with springdoc-openapi: open **Swagger UI** at `http://localhost:8080/swagger-ui.html` to explore and try the endpoints from the browser. The raw OpenAPI specification is available at `http://localhost:8080/v3/api-docs`.
 
 **Logging is idempotent per day.** Calling `POST /habits/{habitId}/logs` twice on the same local day returns the existing log with `200` instead of an error. The first call returns `201`.
 
@@ -174,7 +177,7 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-The web UI is then available at `http://localhost:8080/` and the API at `http://localhost:8080/api/v1`. The database settings live in `src/main/resources/application.yml` and match the `docker-compose.yml` file. The credentials in this repository are for **local development only**.
+The web UI is then available at `http://localhost:8080/`, the API at `http://localhost:8080/api/v1` and Swagger UI at `http://localhost:8080/swagger-ui.html`. The database settings live in `src/main/resources/application.yml` and match the `docker-compose.yml` file. The credentials in this repository are for **local development only**.
 
 ### Run the tests
 
@@ -210,8 +213,7 @@ The project has three kinds of tests, one per layer:
 - [x] Read endpoints (active habits, logs between two dates)
 - [x] CI pipeline (GitHub Actions)
 - [x] Basic web front end
-- [ ] API documentation (OpenAPI / Swagger UI)
-- [ ] Dockerfile
+- [x] API documentation (OpenAPI / Swagger UI)
 
 Out of scope for now: authentication and CORS.
 
